@@ -1,0 +1,430 @@
+/* ==========================================
+   VARIABLES Y CONFIGURACIÓN GENERAL
+   ========================================== */
+:root {
+  --primary: #008080; /* Turquesa clínico y moderno */
+  --primary-dark: #005f5f;
+  --accent: #d4af37; /* Dorado elegante */
+  --accent-hover: #c19b2e;
+  --dark: #1e293b;
+  --light: #f8fafc;
+  --gray: #64748b;
+  --white: #ffffff;
+  --transition: all 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+  background-color: var(--white);
+  color: var(--dark);
+  line-height: 1.6;
+}
+
+/* ==========================================
+   HEADER Y NAVEGACIÓN
+   ========================================== */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 5%;
+  background: var(--white);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: var(--primary);
+  line-height: 1.1;
+}
+
+.logo span {
+  color: var(--accent);
+}
+
+.logo small {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--gray);
+  letter-spacing: 0.5px;
+}
+
+.menu {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.menu a {
+  text-decoration: none;
+  color: var(--dark);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: var(--transition);
+}
+
+.menu a:hover {
+  color: var(--primary);
+}
+
+.btn-gold {
+  background-color: var(--accent);
+  color: var(--white);
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  display: inline-block;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-gold:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-2px);
+}
+
+/* ==========================================
+   HERO SECTION
+   ========================================== */
+.hero {
+  background: linear-gradient(135deg, rgba(0, 128, 128, 0.9), rgba(15, 23, 42, 0.9)), url('img/fondo2.jpg') center/cover no-repeat;
+  color: var(--white);
+  padding: 6rem 5% 5rem 5%;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-text {
+  max-width: 800px;
+}
+
+.badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(5px);
+}
+
+.hero h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.hero p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+}
+
+.btn-outline {
+  color: var(--white);
+  border: 2px solid var(--white);
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: var(--transition);
+  display: inline-block;
+}
+
+.btn-outline:hover {
+  background: var(--white);
+  color: var(--dark);
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 12px;
+  backdrop-filter: blur(5px);
+}
+
+/* ==========================================
+   SECCIONES COMUNES
+   ========================================== */
+section {
+  padding: 5rem 5%;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+
+.section-title h2 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 0.5rem;
+}
+
+.section-title p {
+  color: var(--gray);
+  font-size: 1.05rem;
+}
+
+/* ==========================================
+   SERVICIOS
+   ========================================== */
+.servicios {
+  background-color: var(--light);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.card {
+  background: var(--white);
+  padding: 2.5rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+  transition: var(--transition);
+  border: 1px solid rgba(0,0,0,0.03);
+  text-align: center;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+}
+
+.card .icon {
+  font-size: 2.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.card h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  color: var(--dark);
+}
+
+.card p {
+  color: var(--gray);
+  font-size: 0.95rem;
+}
+
+/* ==========================================
+   NOSOTROS
+   ========================================== */
+.nosotros-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+.people img {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.text-nosotros {
+  background: var(--light);
+  padding: 2.5rem;
+  border-radius: 16px;
+  border-left: 5px solid var(--primary);
+}
+
+.text-nosotros .somos {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+.text-nosotros p {
+  color: var(--gray);
+  margin-bottom: 1rem;
+  font-size: 0.98rem;
+}
+
+/* ==========================================
+   FORMULARIO DE CONTACTO
+   ========================================== */
+.contacto {
+  background-color: var(--white);
+}
+
+.contacto-container {
+  max-width: 650px;
+  margin: 0 auto;
+  background: var(--light);
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--dark);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+  transition: var(--transition);
+  background: var(--white);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.15);
+}
+
+.btn-gold-submit {
+  background-color: var(--accent);
+  color: var(--white);
+  padding: 0.9rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.btn-gold-submit:hover {
+  background-color: var(--accent-hover);
+}
+
+/* ==========================================
+   FOOTER
+   ========================================== */
+footer {
+  background-color: var(--dark);
+  color: var(--white);
+  padding: 2.5rem 5%;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ==========================================
+   DISEÑO RESPONSIVO (MÓVILES)
+   ========================================== */
+@media (max-width: 900px) {
+  .nosotros-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .people img {
+    height: 250px;
+  }
+
+  .hero h1 {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .menu {
+    gap: 1rem;
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .desktop-btn {
+    display: none; /* Se oculta en el header móvil para ahorrar espacio, el hero ya tiene botones */
+  }
+
+  .hero {
+    padding: 4rem 1.5rem;
+  }
+
+  .contacto-container {
+    padding: 1.5rem;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+}
