@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<link rel="stylesheet" href="estilos.css">    
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dental Sonrisa | La Odontología Feliz</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+
+    
+</head>
+<body>
+<header>
+  <div class="logo">Dental<br>Sonrisa <span>LA ODONTOLOGÍA FELIZ</span></div>
+  <nav>
+    <section class="menu"> <!-- se le agrego la clase menu para que cuando pasemos el maus encima de inicio, servicios, etc cambie de color -->   
+    <a href="#">Inicio</a>
+    <a href="#servicios">Servicios</a>
+    <a href="#nosotros">Nosotros</a><!--se le agrega numeral seguido del nombre: nosotros del menu esto es para que al hacer click se desplace hacia abajo --> 
+      </section>
+    <a class="btn-gold" href="#" onclick="cita()">📅 Agendar Cita</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-text">
+    <div class="badge">✦ LA ODONTOLOGÍA FELIZ</div>
+    <h1>Tu sonrisa es nuestra prioridad</h1>
+    <p>Clínica dental moderna con tecnología de vanguardia y un ambiente cálido. Cuidado personalizado para que cada visita sea feliz y confortable.</p>
+    <a class="btn-gold" href="#" onclick="cita()">📅 Agendar Cita Ahora</a>
+    <a style="color:#fff;border:1px solid #fff;padding:12px 22px;border-radius:10px;text-decoration:none;margin-left:10px" href="#servicios">Conocer Servicios →</a>
+    <div class="stats">
+      <div>📅 <b>+500 Pacientes felices</b></div>
+      <div>⭐ <b>4.9/5 en Google</b></div>
+      <div>🛡️ <b>Tecnología última generación</b></div>
+    </div>
+  </div>
+</section>
+
+<section class="servicios" id="servicios">
+  <h2>Nuestros Servicios</h2>
+  <p>Cuidado dental integral para una sonrisa saludable y feliz</p>
+  <div class="cards">
+      
+    <div class="card"><div class="icon">🦷</div><h3>Ortodoncia</h3><p>Brackets e invisalign para alinear tu sonrisa con comodidad y precisión.</p></div>
+      
+    <div class="card"><div class="icon">✨</div><h3>Estética Dental</h3><p>Blanqueamiento, carillas y diseño de sonrisa para un resultado natural y radiante.</p></div>
+      
+    <div class="card"><div class="icon">🪥</div><h3>Odontología General</h3><p>Limpiezas, restauraciones y prevención para cuidar tu salud bucal diariamente.</p></div>
+      <!---->
+  </div>
+</section>
+
+<section class="nosotros" id="nosotros">
+  <h2>Nosotros</h2>
+  <p>cada uno de nosotros estamos listos para ayudarte</p>
+<div class="cards">
+      
+<div class="people">
+                    <img src="img/fondo2.jpg" alt="Dr. Juan Pérez, Odontólogo">
+                
+                    <!--<div class="texto-team">
+                        <h4>HTML</h4>
+                        <p>Lorem ipsum dolor sit.</p>
+                    </div>-->
+</div> 
+ <div class="text-nosotros"><h3 class="somos">Quiénes somos?</h3><p><br>Un grupo de humanos que cuida las sonrisas de otros humanos.
+Olvídate del típico olor a hospital, de los ruidos intimidantes y de las explicaciones médicas que nadie entiende. En [Dental Sonrisa] decidimos reinventar la visita al dentista.<br>
+Somos un equipo de profesionales apasionados que cree que ir a consulta puede ser una experiencia relajada, transparente y, ¿por qué no?, divertida. Nos dedicamos a fusionar la tecnología de punta con un trato tan cálido que te hará sentir en la sala de tu casa. No solo reparamos dientes; diseñamos la seguridad que necesitas para comerte al mundo.</p>
+ </div> 
+<div class="people">
+                    <img src="fondoo.jpg" alt="">
+                
+                    <!--<div class="texto-team">
+                        <h4>HTML</h4>
+                        <p>Lorem ipsum dolor sit.</p>
+                    </div>-->
+ </div>  
+</div>
+</section>    
+
+<footer>
+  <div>© 2026 Dental Sonrisa • La Odontología Feliz</div>
+  <div>📞 +52 918 120 0104 • Mapastepec, Chiapas</div>
+    
+ 
+</footer>
+
+<script>
+function cita(){
+  let num = "529181200104"; // CAMBIA TU NUMERO AQUI
+  let msg = "Hola Dental Sonrisa, quiero agendar una cita. Vi su página web.";
+  window.open("https://wa.me/"+num+"?text="+encodeURIComponent(msg), "_blank");
+}
+</script>
+</body>
+</html>
