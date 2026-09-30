@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+   <link rel="stylesheet" href="estilos.css">  
+   <link rel="stylesheet" href="script.js">
+   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Dental Sonrisa | La Odontología Feliz</title>
+</head>
+<body>
+<header>
+  <div class="logo">Dental<br>Sonrisa <span>LA ODONTOLOGÍA FELIZ</span></div>
+  <nav>
+    <section class="menu"> <!-- se le agrego la clase menu para que cuando pasemos el maus encima de inicio, servicios, etc cambie de color -->   
+    <a href="#">Inicio</a>
+    <a href="#servicios">Servicios</a>
+    <a href="#nosotros">Nosotros</a><!--se le agrega numeral seguido del nombre: nosotros del menu esto es para que al hacer click se desplace hacia abajo --> 
+    </section>
+    <a class="btn-gold" href="#" onclick="cita()">📅 Agendar Cita</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-text">
+     <div class="badge">✦ LA ODONTOLOGÍA FELIZ</div>
+     <h1 class="revelar">Tu sonrisa es nuestra prioridad</h1>
+     <p class="revelar">Clínica dental moderna con tecnología de vanguardia y un ambiente cálido. Cuidado personalizado para que cada visita sea feliz y confortable.</p>
+      <a class="btn-gold" href="#" onclick="cita()"> 📅Agendar Cita </a>
+     <a
+       style="color:#fff;
+       border:1px solid #fff;
+        padding:12px 22px;
+        border-radius:10px;
+        text-decoration:none;
+        margin-left:10px" href="#servicios">Servicios →
+     </a>
+     <div class="stats">
+      <div>📅 <b>+500 Pacientes felices</b></div>
+      <div>⭐ <b>4.9/5 en Google</b></div>
+      <div>🛡️ <b>Tecnología última generación</b></div>
+    </div>
+  </div>
+</section>
+
+<section class="servicios" id="servicios">
+    <h2>Nuestros Servicios</h2>
+    <p>Cuidado dental integral para una sonrisa saludable y feliz</p>
+    <div class="cards">
+      
+    <div class="card"><div class="icon">🦷</div><h3>Ortodoncia</h3><p>Brackets e invisalign para alinear tu sonrisa con comodidad y precisión.</p></div>
+      
+    <div class="card"><div class="icon">✨</div><h3>Estética Dental</h3><p>Blanqueamiento, carillas y diseño de sonrisa para un resultado natural y radiante.</p></div>
+      
+    <div class="card"><div class="icon">🪥</div><h3>Odontología General</h3><p>Limpiezas, restauraciones y prevención para cuidar tu salud bucal diariamente.</p></div>
+      <!---->
+  </div>
+</section>
+
+<section class="nosotros" id="nosotros">
+   <h2>Nosotros</h2>
+   <p>cada uno de nosotros estamos listos para ayudarte</p>
+   <div class="cards">
+      
+   <div class="people">
+   <img class="revelar" src="fondo2.jpg" alt="Dr. Juan Pérez, Odontólogo">
+
+   </div> 
+   <div class="people"><h3 class="somos">Quiénes somos?</h3><p class="revelar"><br> Grupo de profecionistas que cuidamos las sonrisas.
+Olvídate del típico olor a hospital, de los ruidos intimidantes y de las explicaciones médicas que nadie entiende. En Dental Sonrisa decidimos reinventar la visita al dentista.<br>
+Somos un equipo de profesionales apasionados que cree que ir a consulta puede ser una experiencia relajada, transparente y, ¿por qué no?, divertida. Nos dedicamos a fusionar la tecnología de punta con un trato tan cálido que te hará sentir en la sala de tu casa. No solo reparamos dientes; diseñamos la seguridad que necesitas para comerte al mundo.     </p>
+  </div> 
+  <div class="people">
+    <img class="revelar" src="fondoo.jpg" alt="">
+  </div>  
+  </div>
+</section>    
+
+<footer>
+  <div>© 2026 Dental Sonrisa • La Odontología Feliz</div>
+  <div>📞 +52 918 120 0104 • Mapastepec, Chiapas</div>
+</footer>
+
+<script>
+function cita(){
+  let num = "529181200104"; // CAMBIA TU NUMERO AQUI
+  let msg = "Hola Dental Sonrisa, quiero agendar una cita. Vi su página web.";
+  window.open("https://wa.me/"+num+"?text="+encodeURIComponent(msg), "_blank");
+}
+</script>
+<script>
+    const elementos = document.querySelectorAll('.revelar');
+    const observador = new IntersectionObserver((entradas) =>{entradas.forEach(e => {
+        if(e.isIntersecting){
+            e.target.classList.add('activo');
+        }
+    });
+},{ threshold: 0.2 });
+    elementos.forEach(el => observador.observe(el));
+</script>
+
+<!-- Botón Flotante de WhatsApp con Burbuja de Texto -->
+<div class="whatsapp-container">
+  <div class="whatsapp-badge" id="waBadge">
+    <span>¡Hola! 👋 ¿Necesitas agendar tu cita?</span>
+    <button type="button" class="close-badge" onclick="cerrarBurbuja(event)" aria-label="Cerrar mensaje">&times;</button>
+  </div>
+  
+  <a href="#" class="whatsapp-btn" onclick="cita(); return false;" title="Contactar por WhatsApp" aria-label="Contactar por WhatsApp">
+    <svg viewBox="0 0 32 32" class="whatsapp-icon">
+      <path fill="currentColor" d="M16 2a13.72 13.72 0 0 0-11.82 20.62L2 30l7.63-2a13.72 13.72 0 1 0 6.37-26zm0 25.13a11.37 11.37 0 0 1-5.8-1.59l-.42-.25-4.31 1.13 1.15-4.2-.28-.44a11.4 11.4 0 1 1 9.66 5.35zm6.25-8.52c-.34-.17-2-.99-2.31-1.1s-.54-.17-.77.17-.88 1.1-1.08 1.33-.4.25-.74.08a9.37 9.37 0 0 1-2.75-1.7 10.3 10.3 0 0 1-1.9-2.37c-.2-.34 0-.52.17-.69l.48-.56a2.22 2.22 0 0 0 .17-.29.38.38 0 0 0 0-.36c-.08-.17-.77-1.85-1.05-2.53s-.56-.58-.77-.59h-.66a1.27 1.27 0 0 0-.92.43 3.86 3.86 0 0 0-1.2 2.87 6.7 6.7 0 0 0 1.4 3.55c.17.23 2.45 3.75 5.94 5.26a20 20 0 0 0 2 .74 4.8 4.8 0 0 0 2.2.14 3.6 3.6 0 0 0 2.37-1.67 2.92 2.92 0 0 0 .2-1.67c-.08-.13-.25-.21-.59-.38z"/>
+    </svg>
+  </a>
+</div>
+
+</body>
+</html>
