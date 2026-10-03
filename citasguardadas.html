@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Citas del Día - Clínica</title>
+    <link rel="stylesheet" href="agregarcita.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Estilos específicos para la tabla de citas */
+        .container-dashboard {
+            max-width: 900px;
+        }
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #dfe6e9;
+        }
+        th {
+            background-color: #0984e3;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f1f2f6;
+        }
+        .btn-volver {
+            display: inline-block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #0984e3;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .btn-volver i {
+            margin-right: 5px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #636e72;
+        }
+        .actions-cell button {
+            background: #d63031;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .actions-cell button:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container container-dashboard">
+        <a href="index.html" class="btn-volver"><i class="fa-solid fa-arrow-left"></i> Volver al formulario de citas</a>
+        
+        <header>
+            <h1><i class="fa-solid fa-calendar-days"></i> Citas Registradas</h1>
+            <p>Lista de todas las citas agendadas</p>
+        </header>
+
+        <main>
+            <div class="table-responsive">
+                <table id="appointmentsTable">
+                    <thead>
+                        <tr>
+                            <th>Paciente</th>
+                            <th>Teléfono</th>
+                            <th>Especialidad</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Las citas se cargarán aquí automáticamente con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="hidden empty-state">
+                <i class="fa-solid fa-folder-open" style="font-size: 40px; margin-bottom: 10px; color: #b2bec3;"></i>
+                <p>No hay citas registradas por el momento.</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableBody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            const appointmentsTable = document.getElementById('appointmentsTable');
+
+            function cargarCitas() {
+                // Obtener citas del localStorage (o arreglo vacío si no hay nada)
+                let citas = JSON.parse(localStorage.getItem('citasClinica')) || [];
+
+                tableBody.innerHTML = '';
+
+                if (citas.length === 0) {
+                    appointmentsTable.style.display = 'none';
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                appointmentsTable.style.display = 'table';
+                emptyState.classList.add('hidden');
+
+                citas.forEach((cita, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${cita.name}</strong><br><small style="color:#636e72;">${cita.email}</small></td>
+                        <td>${cita.phone}</td>
+                        <td>${cita.department}</td>
+                        <td>${cita.date}</td>
+                        <td>${cita.time}</td>
+                        <td class="actions-cell">
+                            <button onclick="eliminarCita(${index})"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            // Función global para eliminar una cita
+            window.eliminarCita = function(index) {
+                let citas = JSON.parse(localStorage.getItem('citasClinica')) || [];
+                if (confirm('¿Estás seguro de que deseas eliminar esta cita?')) {
+                    citas.splice(index, 1); // Elimina el elemento
+                    localStorage.setItem('citasClinica', JSON.stringify(citas)); // Guarda los cambios
+                    cargarCitas(); // Recarga la tabla
+                }
+            }
+
+            cargarCitas();
+        });
+    </script>
+</body>
+</html>
