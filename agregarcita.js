@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('citasClinica', JSON.stringify(citas));
 
         // 4. Crear el texto del mensaje para WhatsApp
-        const mensaje = `Hola, quiero agendar una cita médica en Clínica Salud+:%0A` +
+        const mensaje = `Hola, quiero agendar una cita en Clínica Dental Sonrisa:%0A` +
                         `*Nombre:* ${name}%0A` +
                         `*Correo:* ${email}%0A` +
                         `*Teléfono:* ${phone}%0A` +
