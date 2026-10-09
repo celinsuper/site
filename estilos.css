@@ -376,7 +376,7 @@ html { scroll-behavior: smooth; }
 }
 /* Fin Estilos para el Carrusel */
 *la seccion de nosotros adactarlas a moviles que la imagen quede arriba y el texto abajo*/
-  @media (min-width: 767px) {
+  @media (max-width: 767px) {
   .about-containerr {
      max-width: 1200px;
             margin: 0 auto;
