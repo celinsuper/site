@@ -378,12 +378,9 @@ html { scroll-behavior: smooth; }
 *la seccion de nosotros adactarlas a moviles que la imagen quede arriba y el texto abajo*/
   @media (max-width: 767px) {
   .about-containerr {
-     max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 50px;
-            align-items: center;
+     display:flex;
+     flex-direction:column;
+    width:100%;
   }
     .about-image, about-text{
       width: 100%;
