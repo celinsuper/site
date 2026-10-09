@@ -399,6 +399,7 @@ html { scroll-behavior: smooth; }
     }
     .about-text{
       order: 1;
-      text-aling:center;
     }
+    .about-text h2{
+      text-aling:center;
   }
