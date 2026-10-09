@@ -393,12 +393,4 @@ html { scroll-behavior: smooth; }
       height: auto;
       display: block;
     }
-    .about-containerr {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 50px;
-            align-items: center;
-        }
   }
