@@ -375,3 +375,30 @@ html { scroll-behavior: smooth; }
 }
 }
 /* Fin Estilos para el Carrusel */
+*la seccion de nosotros adactarlas a moviles que la imagen quede arriba y el texto abajo*/
+  @media (min-width: 767px) {
+  .about-containerr {
+     max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+  }
+    .about-image, about-text{
+      width: 100%;
+    }
+    .about-image img{
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .about-containerr {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+  }
