@@ -380,7 +380,7 @@ html { scroll-behavior: smooth; }
 
 /*la seccion de nosotros adactarlas a moviles que la imagen quede arriba y el texto abajo*/
   @media (max-width: 768px) {
-  section .about .about-container {
+   .about .about-container {
     display: flex;
     flex-direction: column;
     width: 100%;
