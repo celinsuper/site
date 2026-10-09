@@ -399,5 +399,6 @@ html { scroll-behavior: smooth; }
     }
     .about-text{
       order: 1;
+      text-aling:center;
     }
   }
