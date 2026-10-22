@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DentPOS - Sistema de Gestión y POS Dental</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        teal: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Teeth Odontogram SVG Styles */
+        .tooth-surface {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            stroke: #475569;
+            stroke-width: 1.2;
+            fill: #ffffff;
+        }
+        .tooth-surface:hover {
+            fill: #e2e8f0;
+            stroke: #0f766e;
+            stroke-width: 2;
+        }
+
+        /* Dental conditions coloring */
+        .surface-caries { fill: #ef4444 !important; } /* Red */
+        .surface-restoration { fill: #3b82f6 !important; } /* Blue */
+        .surface-sealant { fill: #10b981 !important; } /* Green */
+        .surface-calculus { fill: #f59e0b !important; } /* Yellow/Orange */
+        
+        .tooth-absent { opacity: 0.25; filter: grayscale(100%); }
+        .tooth-endodontic { stroke: #8b5cf6 !important; stroke-width: 2.5 !important; }
+        .tooth-crown { fill: #eab308 !important; opacity: 0.8; }
+
+        /* Thermal Ticket print layout */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-ticket, #printable-ticket * {
+                visibility: visible;
+            }
+            #printable-ticket {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 80mm;
+                padding: 10px;
+                font-size: 12px;
+                background: white;
+            }
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 antialiased bg-slate-100 flex flex-col md:flex-row overflow-hidden font-sans">
+
+    <!-- Mobile Header / Toggle Navigation -->
+    <div class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center z-50 shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="bg-teal-500 text-white p-2 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-tooth text-xl"></i>
+            </div>
+            <span class="font-bold text-lg tracking-wide text-teal-400">DentPOS</span>
+        </div>
+        <button id="mobile-menu-btn" class="text-slate-300 hover:text-white focus:outline-none">
+            <i class="fa-solid fa-bars text-2xl"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-300 ease-in-out z-40 w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shadow-xl flex-shrink-0">
+        <div>
+            <!-- Logo Brand -->
+            <div class="p-5 hidden md:flex items-center space-x-3 border-b border-slate-800">
+                <div class="bg-gradient-to-tr from-teal-600 to-cyan-500 text-white p-2.5 rounded-xl shadow-lg shadow-teal-500/20 flex items-center justify-center">
+                    <i class="fa-solid fa-tooth text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white tracking-wide leading-none">Dent<span class="text-teal-400">POS</span></h1>
+                    <span class="text-xs text-slate-400">Clínica & Odontograma</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-1.5 font-medium text-sm">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-200 text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                    <i class="fa-solid fa-chart-line w-5 text-center text-teal-400"></i>
+                    <span>Dashboard / Inicio</span>
+                </button>
+
+                <button onclick="switchTab('citas')" id="nav-citas" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-200 text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                    <i class="fa-regular fa-calendar-check w-5 text-center text-cyan-400"></i>
+                    <span>Agenda y Citas</span>
+                </button>
+
+                <button onclick="switchTab('expediente')" id="nav-expediente" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-200 text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                    <i class="fa-solid fa-hospital-user w-5 text-center text-indigo-400"></i>
+                    <span>Expediente & Odontograma</span>
+                </button>
+
+                <button onclick="switchTab('pos')" id="nav-pos" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-200 text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                    <i class="fa-solid fa-cash-register w-5 text-center text-emerald-400"></i>
+                    <span>Caja y Cobros (POS)</span>
+                </button>
+
+                <button onclick="switchTab('inventario')" id="nav-inventario" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-200 text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                    <i class="fa-solid fa-boxes-stacked w-5 text-center text-amber-400"></i>
+                    <span>Insumos & Inventario</span>
+                </button>
+
+                <button onclick="switchTab('odontologos')" id="nav-odontologos" class="nav-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition duration-200 text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                    <i class="fa-solid fa-user-doctor w-5 text-center text-rose-400"></i>
+                    <span>Doctores & Comisiones</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- System User info -->
+        <div class="p-4 border-t border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-slate-200">
+                    DR
+                </div>
+                <div>
+                    <p class="font-semibold text-slate-200">Dr. Roberto Silva</p>
+                    <p class="text-slate-500">Administrador POS</p>
+                </div>
+            </div>
+            <button onclick="resetDemoData()" title="Restablecer Datos Demo" class="p-2 text-slate-500 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto bg-slate-100 p-4 md:p-8 space-y-6">
+
+        <!-- ==================== TAB 1: DASHBOARD ==================== -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Panel Principal - Clínica Dental</h2>
+                    <p class="text-slate-500 text-sm">Resumen de operaciones del día y desempeño financiero.</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span id="current-date-badge" class="px-3 py-1.5 bg-slate-100 text-slate-700 font-medium rounded-lg text-xs border border-slate-200 flex items-center gap-2">
+                        <i class="fa-regular fa-calendar text-teal-600"></i>
+                        <span id="live-date">--/--/----</span>
+                    </span>
+                    <button onclick="openNewCitaModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-medium px-4 py-2 rounded-xl shadow-sm transition text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Nueva Cita
+                    </button>
+                </div>
+            </div>
+
+            <!-- Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- Card 1 -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Citas Hoy</p>
+                        <h3 id="dash-citas-count" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                        <p class="text-xs text-emerald-600 mt-1 font-medium"><i class="fa-solid fa-circle text-[8px]"></i> Agenda activa</p>
+                    </div>
+                    <div class="p-3.5 bg-cyan-50 text-cyan-600 rounded-2xl">
+                        <i class="fa-regular fa-calendar-check text-2xl"></i>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ingresos Hoy</p>
+                        <h3 id="dash-ingresos-hoy" class="text-2xl font-bold text-slate-800 mt-1">$0.00</h3>
+                        <p class="text-xs text-slate-500 mt-1">Pagos recibidos</p>
+                    </div>
+                    <div class="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl">
+                        <i class="fa-solid fa-cash-register text-2xl"></i>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pacientes Registrados</p>
+                        <h3 id="dash-pacientes-count" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                        <p class="text-xs text-slate-500 mt-1">Expedientes activos</p>
+                    </div>
+                    <div class="p-3.5 bg-indigo-50 text-indigo-600 rounded-2xl">
+                        <i class="fa-solid fa-user-group text-2xl"></i>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Saldo Pendiente por Cobrar</p>
+                        <h3 id="dash-saldo-pendiente" class="text-2xl font-bold text-rose-600 mt-1">$0.00</h3>
+                        <p class="text-xs text-rose-500 mt-1 font-medium">Tratamientos en proceso</p>
+                    </div>
+                    <div class="p-3.5 bg-rose-50 text-rose-600 rounded-2xl">
+                        <i class="fa-solid fa-hand-holding-dollar text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity & Quick Schedule -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Citas para Hoy -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-teal-600"></i>
+                            Citas Programadas para Hoy
+                        </h3>
+                        <button onclick="switchTab('citas')" class="text-xs text-teal-600 hover:text-teal-700 font-semibold">Ver Todo <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-semibold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3">Hora</th>
+                                    <th class="p-3">Paciente</th>
+                                    <th class="p-3">Tratamiento</th>
+                                    <th class="p-3">Doctor</th>
+                                    <th class="p-3 text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-citas-tbody" class="divide-y divide-slate-100">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Resumen de Actividad / Insumos Críticos -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                            Alertas de Inventario Bajo
+                        </h3>
+                        <ul id="dash-low-stock-list" class="space-y-3">
+                            <!-- Dynamically loaded -->
+                        </ul>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100">
+                        <button onclick="switchTab('inventario')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 rounded-xl transition text-center">
+                            Gestionar Inventario Completo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: CITAS Y AGENDA ==================== -->
+        <section id="tab-citas" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Agenda de Citas Médicas</h2>
+                    <p class="text-slate-500 text-sm">Control de agendas, citas de pacientes y estados.</p>
+                </div>
+                <button onclick="openNewCitaModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-medium px-4 py-2.5 rounded-xl shadow-sm transition text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-plus"></i> Agendar Nueva Cita
+                </button>
+            </div>
+
+            <!-- Filtros de citas -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-wrap gap-4 items-center justify-between">
+                <div class="flex items-center space-x-3 w-full sm:w-auto">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Filtrar Fecha:</label>
+                    <input type="date" id="citas-filter-date" onchange="renderCitasTable()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-bold text-slate-500 uppercase">Estado:</span>
+                    <select id="citas-filter-status" onchange="renderCitasTable()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        <option value="Todos">Todos los Estados</option>
+                        <option value="Confirmada">Confirmada</option>
+                        <option value="En Espera">En Sala de Espera</option>
+                        <option value="Atendida">Atendida</option>
+                        <option value="Cancelada">Cancelada</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tabla de citas -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-semibold border-b border-slate-200">
+                            <tr>
+                                <th class="p-4">Fecha & Hora</th>
+                                <th class="p-4">Paciente</th>
+                                <th class="p-4">Tratamiento</th>
+                                <th class="p-4">Odontólogo</th>
+                                <th class="p-4">Notas / Observación</th>
+                                <th class="p-4 text-center">Estado</th>
+                                <th class="p-4 text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="citas-table-body" class="divide-y divide-slate-100">
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: EXPEDIENTE Y ODONTOGRAMA ==================== -->
+        <section id="tab-expediente" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Expediente Clínico y Odontograma</h2>
+                    <p class="text-slate-500 text-sm">Registro interactivo de estado dental del paciente (Sistema FDI).</p>
+                </div>
+                
+                <!-- Patient Selector -->
+                <div class="flex items-center space-x-3 w-full md:w-auto">
+                    <i class="fa-solid fa-user-injured text-slate-400 text-lg"></i>
+                    <select id="odontograma-patient-select" onchange="loadPatientOdontogram()" class="bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm font-semibold text-slate-800 w-full md:w-64 focus:ring-2 focus:ring-teal-500">
+                        <!-- Loaded dynamically -->
+                    </select>
+                    <button onclick="openNewPatientModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-2.5 rounded-xl shadow-sm transition whitespace-nowrap">
+                        + Nuevo Paciente
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Main Interactive Odontogram (2 cols) -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 space-y-6">
+                    <!-- Odontogram Palette / Tools -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Herramienta / Condición Dental Activa:</p>
+                        <div class="flex flex-wrap gap-2 text-xs font-medium">
+                            <button onclick="setTool('caries')" id="tool-caries" class="tool-btn px-3 py-2 rounded-lg border bg-rose-50 text-rose-700 border-rose-300 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span> Caries (Rojo)
+                            </button>
+                            <button onclick="setTool('restoration')" id="tool-restoration" class="tool-btn px-3 py-2 rounded-lg border bg-blue-50 text-blue-700 border-blue-300 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span> Resina/Tratado (Azul)
+                            </button>
+                            <button onclick="setTool('sealant')" id="tool-sealant" class="tool-btn px-3 py-2 rounded-lg border bg-emerald-50 text-emerald-700 border-emerald-300 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Sellador (Verde)
+                            </button>
+                            <button onclick="setTool('endodontic')" id="tool-endodontic" class="tool-btn px-3 py-2 rounded-lg border bg-purple-50 text-purple-700 border-purple-300 flex items-center gap-2">
+                                <i class="fa-solid fa-grip-lines-vertical text-purple-600"></i> Endodoncia
+                            </button>
+                            <button onclick="setTool('crown')" id="tool-crown" class="tool-btn px-3 py-2 rounded-lg border bg-amber-50 text-amber-700 border-amber-300 flex items-center gap-2">
+                                <i class="fa-solid fa-chess-queen text-amber-600"></i> Corona
+                            </button>
+                            <button onclick="setTool('absent')" id="tool-absent" class="tool-btn px-3 py-2 rounded-lg border bg-slate-200 text-slate-700 border-slate-300 flex items-center gap-2">
+                                <i class="fa-solid fa-xmark text-slate-600"></i> Ausente / Extracción
+                            </button>
+                            <button onclick="setTool('clear')" id="tool-clear" class="tool-btn px-3 py-2 rounded-lg border bg-white text-slate-600 border-slate-300 flex items-center gap-2">
+                                <i class="fa-solid fa-eraser"></i> Limpiar Diente
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dental Diagram SVG Workspace -->
+                    <div class="overflow-x-auto py-4">
+                        <div class="min-w-[650px] space-y-8 text-center">
+                            <!-- Arcada Superior -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Arcada Superior (18 - 28)</h4>
+                                <div id="odontogram-upper" class="flex justify-center gap-1.5">
+                                    <!-- Teeth SVGs generated via JS -->
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-200 border-dashed">
+
+                            <!-- Arcada Inferior -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Arcada Inferior (48 - 38)</h4>
+                                <div id="odontogram-lower" class="flex justify-center gap-1.5">
+                                    <!-- Teeth SVGs generated via JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medical History, Evolution & Plan (1 col) -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 space-y-6 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2 border-b border-slate-100 pb-3">
+                            <i class="fa-solid fa-notes-medical text-teal-600"></i>
+                            Expediente y Notas de Evolución
+                        </h3>
+
+                        <!-- Datos Generales Paciente -->
+                        <div id="patient-details-card" class="bg-slate-50 p-3.5 rounded-xl text-xs space-y-1 text-slate-600 border border-slate-200">
+                            <!-- Dynamic Content -->
+                        </div>
+
+                        <!-- Nueva Nota de Evolución -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Agregar Nota Médica / Evolución:</label>
+                            <textarea id="patient-new-note" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="Escriba los avances del paciente o hallazgos del día..."></textarea>
+                            <button onclick="addPatientNote()" class="mt-2 w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 rounded-xl transition">
+                                Guardar Nota Clínica
+                            </button>
+                        </div>
+
+                        <!-- Historial de Notas -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-2">Historial de Consultas:</label>
+                            <div id="patient-notes-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                <!-- Dynamic notes -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Plan de Tratamientos y Costos -->
+                    <div class="pt-4 border-t border-slate-100 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-slate-700 uppercase">Plan de Tratamiento</span>
+                            <button onclick="openAddTreatmentModal()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold">+ Agregar Diagnóstico</button>
+                        </div>
+                        <div id="patient-treatments-list" class="space-y-1.5 text-xs max-h-36 overflow-y-auto">
+                            <!-- Dynamic treatments -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 4: POS - CAJA Y COBROS ==================== -->
+        <section id="tab-pos" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Módulo POS y Caja Registradora</h2>
+                    <p class="text-slate-500 text-sm">Registro de pagos, emisión de comprobantes y corte diario.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="openCorteCajaModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-medium px-4 py-2.5 rounded-xl shadow-sm transition text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-receipt"></i> Arqueo / Corte de Caja
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Terminal de Cobro Form (2 cols) -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 space-y-6">
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-calculator text-emerald-600"></i>
+                        Registrar Cobro de Tratamiento
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Paciente -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Paciente:</label>
+                            <select id="pos-patient-select" onchange="updatePosPendingTreatments()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <!-- Loaded dynamically -->
+                            </select>
+                        </div>
+
+                        <!-- Doctor Tratante -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Atendido por (Doctor):</label>
+                            <select id="pos-doctor-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <!-- Loaded dynamically -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tratamiento o Concepto a Cobrar -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <label class="block text-xs font-bold text-slate-600 uppercase">Tratamiento o Servicio Pendiente:</label>
+                        <select id="pos-treatment-select" onchange="calculatePosTotal()" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <!-- Dynamic -->
+                        </select>
+                    </div>
+
+                    <!-- Desglose de Montos -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Costo Total del Servicio:</label>
+                            <input type="number" id="pos-costo-total" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 text-sm font-bold text-slate-700" value="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Saldo Anterior Pendiente:</label>
+                            <input type="number" id="pos-saldo-pendiente" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 text-sm font-bold text-rose-600" value="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Monto a Cobrar / Abonar Hoy (*):</label>
+                            <input type="number" id="pos-monto-abono" oninput="validatePosPayment()" class="w-full bg-emerald-50 border border-emerald-300 rounded-xl p-2.5 text-sm font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <!-- Métodos de Pago -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-semibold text-slate-600">Método de Pago:</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <label class="flex items-center justify-center p-3 border rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-500 has-[:checked]:text-emerald-700 font-medium text-xs">
+                                <input type="radio" name="pos-payment-method" value="Efectivo" checked class="sr-only">
+                                <i class="fa-solid fa-money-bill-wave mr-2"></i> Efectivo
+                            </label>
+                            <label class="flex items-center justify-center p-3 border rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-500 has-[:checked]:text-emerald-700 font-medium text-xs">
+                                <input type="radio" name="pos-payment-method" value="Tarjeta" class="sr-only">
+                                <i class="fa-solid fa-credit-card mr-2"></i> Tarjeta
+                            </label>
+                            <label class="flex items-center justify-center p-3 border rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-500 has-[:checked]:text-emerald-700 font-medium text-xs">
+                                <input type="radio" name="pos-payment-method" value="Transferencia" class="sr-only">
+                                <i class="fa-solid fa-mobile-screen mr-2"></i> Transferencia
+                            </label>
+                        </div>
+                    </div>
+
+                    <button onclick="processPayment()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-print"></i> Procesar Pago y Generar Ticket (80mm)
+                    </button>
+                </div>
+
+                <!-- Historial de Pagos Recientes (1 col) -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 space-y-4">
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-receipt text-slate-600"></i>
+                        Pagos Procesados Hoy
+                    </h3>
+                    <div id="pos-recent-payments-list" class="space-y-3 max-h-[420px] overflow-y-auto">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 5: INVENTARIO DE INSUMOS ==================== -->
+        <section id="tab-inventario" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Control de Insumos y Materiales Dentales</h2>
+                    <p class="text-slate-500 text-sm">Inventario de reactivos, resinas, instrumental desechable y alertas.</p>
+                </div>
+                <button onclick="openNewInsumoModal()" class="bg-amber-600 hover:bg-amber-700 text-white font-medium px-4 py-2.5 rounded-xl shadow-sm transition text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Registrar Nuevo Insumo
+                </button>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                    <input type="text" id="inventory-search" oninput="renderInventoryTable()" placeholder="Buscar por nombre de insumo..." class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm w-72 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-semibold border-b border-slate-200">
+                            <tr>
+                                <th class="p-4">Código / Ítem</th>
+                                <th class="p-4">Categoría</th>
+                                <th class="p-4">Stock Actual</th>
+                                <th class="p-4">Stock Mínimo</th>
+                                <th class="p-4">Costo Unitario</th>
+                                <th class="p-4 text-center">Estado Stock</th>
+                                <th class="p-4 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body" class="divide-y divide-slate-100">
+                            <!-- Dynamic Inventory items -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 6: ODONTÓLOGOS Y COMISIONES ==================== -->
+        <section id="tab-odontologos" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Control de Especialistas y Comisiones</h2>
+                    <p class="text-slate-500 text-sm">Gestión de odontólogos, porcentajes de honorarios y liquidaciones.</p>
+                </div>
+                <button onclick="openNewDoctorModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-medium px-4 py-2.5 rounded-xl shadow-sm transition text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus"></i> Registrar Doctor
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Lista de doctores -->
+                <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                    <div class="p-4 border-b border-slate-100">
+                        <h3 class="font-bold text-slate-800 text-base">Directorio de Odontólogos Activos</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-semibold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-4">Doctor</th>
+                                    <th class="p-4">Especialidad</th>
+                                    <th class="p-4">% Comisión</th>
+                                    <th class="p-4">Total Generado (Bruto)</th>
+                                    <th class="p-4 text-center">Honorarios / Por Pagar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="doctors-table-body" class="divide-y divide-slate-100">
+                                <!-- Dynamic Doctor Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Card informativo de Comisiones -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 space-y-4">
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-hand-holding-dollar text-rose-500"></i>
+                        Resumen de Liquidaciones
+                    </h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Las comisiones se calculan automáticamente con base en los pagos procesados y liquidados por los pacientes asignados a cada profesional.
+                    </p>
+                    <div id="doctor-payout-summary" class="space-y-3 pt-2">
+                        <!-- Dynamic Payout Summary -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Modal 1: Nueva Cita -->
+    <div id="modal-cita" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-lg">Agendar Nueva Cita</h3>
+                <button onclick="closeModal('modal-cita')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-cita" onsubmit="saveCita(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Paciente:</label>
+                    <select id="cita-patient-id" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-teal-500">
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Doctor Asignado:</label>
+                    <select id="cita-doctor-id" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-teal-500">
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Fecha:</label>
+                        <input type="date" id="cita-fecha" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Hora:</label>
+                        <input type="time" id="cita-hora" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Tratamiento / Motivo de Consulta:</label>
+                    <input type="text" id="cita-tratamiento" required placeholder="Ej. Limpieza dental, Valoración..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('modal-cita')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-md">Guardar Cita</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2: Nuevo Paciente -->
+    <div id="modal-paciente" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-lg">Registrar Nuevo Paciente</h3>
+                <button onclick="closeModal('modal-paciente')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-paciente" onsubmit="savePaciente(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Nombre Completo:</label>
+                    <input type="text" id="paciente-nombre" required placeholder="Ej. Ana María Gómez" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Teléfono:</label>
+                        <input type="tel" id="paciente-telefono" required placeholder="555-0192" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Edad:</label>
+                        <input type="number" id="paciente-edad" required placeholder="32" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Alergias / Antecedentes Médicos:</label>
+                    <input type="text" id="paciente-alergias" placeholder="Ej. Alérgica a Penicilina, Hipertensa..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('modal-paciente')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md">Registrar Paciente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 3: Agregar Tratamiento a Plan -->
+    <div id="modal-tratamiento" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-lg">Agregar Servicio / Diagnóstico</h3>
+                <button onclick="closeModal('modal-tratamiento')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-tratamiento" onsubmit="saveTratamientoPlan(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Procedimiento:</label>
+                    <input type="text" id="tratamiento-nombre" required placeholder="Ej. Endodoncia Molar 26, Resina Compuesta..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Costo ($):</label>
+                    <input type="number" id="tratamiento-costo" required step="0.01" placeholder="1500.00" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('modal-tratamiento')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md">Añadir a Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 4: Nuevo Insumo -->
+    <div id="modal-insumo" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-lg">Registrar Insumo / Material</h3>
+                <button onclick="closeModal('modal-insumo')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-insumo" onsubmit="saveInsumo(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Nombre del Material:</label>
+                    <input type="text" id="insumo-nombre" required placeholder="Ej. Resina Filtek Z250 A2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Categoría:</label>
+                    <input type="text" id="insumo-categoria" required placeholder="Ej. Restauración, Anestésicos, Desechables..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Stock Actual:</label>
+                        <input type="number" id="insumo-stock" required placeholder="10" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Stock Mín.:</label>
+                        <input type="number" id="insumo-min" required placeholder="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">Costo U.:</label>
+                        <input type="number" id="insumo-costo" required step="0.01" placeholder="450.00" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('modal-insumo')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-md">Guardar Insumo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 5: Nuevo Doctor -->
+    <div id="modal-doctor" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-lg">Registrar Odontólogo / Especialista</h3>
+                <button onclick="closeModal('modal-doctor')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-doctor" onsubmit="saveDoctor(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Nombre Completo:</label>
+                    <input type="text" id="doctor-nombre" required placeholder="Dr. Carlos Mendoza" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Especialidad:</label>
+                    <input type="text" id="doctor-especialidad" required placeholder="Ortodoncia, Endodoncia, Odontopediatría..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">% Porcentaje de Comisión sobre Cobros:</label>
+                    <input type="number" id="doctor-comision" required step="1" max="100" min="0" placeholder="40" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('modal-doctor')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-md">Registrar Médico</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 6: Vista Previa de Ticket Térmico 80mm -->
+    <div id="modal-ticket" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h3 class="font-bold text-slate-800 text-sm">Comprobante / Ticket Generado</h3>
+                <button onclick="closeModal('modal-ticket')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <!-- Area Imprimible -->
+            <div id="printable-ticket" class="bg-slate-50 p-4 border border-slate-200 rounded-lg font-mono text-xs text-slate-800 space-y-2">
+                <div class="text-center border-b border-dashed border-slate-300 pb-2">
+                    <h4 class="font-bold text-sm">CLÍNICA DENTAL DENTPOS</h4>
+                    <p class="text-[10px] text-slate-500">Av. Odontología #450 - Tel: 555-0192</p>
+                    <p class="text-[10px] text-slate-500">RFC: DENT-901020-XX</p>
+                </div>
+                <div class="space-y-1 text-[11px] pt-1">
+                    <p><strong>Folio:</strong> <span id="ticket-folio">#001</span></p>
+                    <p><strong>Fecha:</strong> <span id="ticket-fecha">--/--/----</span></p>
+                    <p><strong>Paciente:</strong> <span id="ticket-paciente">--</span></p>
+                    <p><strong>Atendió:</strong> <span id="ticket-doctor">--</span></p>
+                </div>
+                <div class="border-t border-b border-dashed border-slate-300 py-2 space-y-1 text-[11px]">
+                    <div class="flex justify-between font-bold">
+                        <span>Concepto:</span>
+                        <span>Monto:</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span id="ticket-concepto">Tratamiento</span>
+                        <span id="ticket-monto-concepto">$0.00</span>
+                    </div>
+                </div>
+                <div class="space-y-1 text-[11px] text-right pt-1">
+                    <p><strong>Método de Pago:</strong> <span id="ticket-metodo">Efectivo</span></p>
+                    <p class="text-sm font-bold text-slate-900">Total Pagado: <span id="ticket-total">$0.00</span></p>
+                    <p class="text-[10px] text-slate-500">Saldo Restante: <span id="ticket-saldo-restante">$0.00</span></p>
+                </div>
+                <div class="text-center border-t border-dashed border-slate-300 pt-2 text-[10px] text-slate-400">
+                    ¡Gracias por su confianza y su sonrisa!
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeModal('modal-ticket')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-semibold">Cerrar</button>
+                <button onclick="window.print()" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold shadow-md flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i> Imprimir Ticket
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 7: Arqueo / Corte de Caja -->
+    <div id="modal-corte" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-vault text-emerald-600"></i> Arqueo y Corte de Caja
+                </h3>
+                <button onclick="closeModal('modal-corte')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div id="corte-caja-details" class="space-y-3 text-xs text-slate-700">
+                <!-- Dynamic Corte info -->
+            </div>
+
+            <div class="pt-3 flex justify-end">
+                <button onclick="closeModal('modal-corte')" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold shadow-md">
+                    Entendido / Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT LOGIC -->
+    <script>
+        // Default initial Mock Data
+        const defaultData = {
+            pacientes: [
+                { id: 1, nombre: 'Ana María Gómez', telefono: '555-0192', edad: 32, alergias: 'Ninguna', saldoPendiente: 1500, notas: ['15/10/2026 - Paciente refiere dolor leve en molar superior derecho.'], tratamientos: [{ id: 101, nombre: 'Resina Oclusal D26', costo: 1500, pagado: 0, estado: 'Pendiente' }] },
+                { id: 2, nombre: 'Carlos Eduardo Ruiz', telefono: '555-8821', edad: 45, alergias: 'Penicilina', saldoPendiente: 0, notas: ['10/10/2026 - Limpieza ultrasónica completada con éxito.'], tratamientos: [{ id: 102, nombre: 'Profilaxis Dental', costo: 800, pagado: 800, estado: 'Pagado' }] }
+            ],
+            doctor: [
+                { id: 1, nombre: 'Dr. Roberto Silva', especialidad: 'Odontología General', comision: 40 },
+                { id: 2, nombre: 'Dra. Elena Rostova', especialidad: 'Endodoncia & Cirugía', comision: 50 }
+            ],
+            citas: [
+                { id: 1, pacienteId: 1, doctorId: 1, fecha: new Date().toISOString().split('T')[0], hora: '10:00', tratamiento: 'Resina Oclusal D26', estado: 'Confirmada', notas: 'Confirmó vía WhatsApp' },
+                { id: 2, pacienteId: 2, doctorId: 2, fecha: new Date().toISOString().split('T')[0], hora: '11:30', tratamiento: 'Revisión Endodoncia', estado: 'En Espera', notas: 'Paciente en recepción' }
+            ],
+            insumos: [
+                { id: 1, nombre: 'Resina Composite A2 Filtek', categoria: 'Restauración', stock: 12, min: 5, costo: 420 },
+                { id: 2, nombre: 'Anestesia Lidocaína 2% (Caja 50)', categoria: 'Anestésicos', stock: 2, min: 4, costo: 680 },
+                { id: 3, nombre: 'Guantes de Nitrilo (Caja M)', categoria: 'Desechables', stock: 18, min: 10, costo: 150 }
+            ],
+            pagos: [
+                { id: 1, folio: 'F-1001', fecha: new Date().toISOString().split('T')[0], pacienteId: 2, doctorId: 1, tratamiento: 'Profilaxis Dental', monto: 800, metodo: 'Efectivo', saldoRestante: 0 }
+            ],
+            odontogramas: {} // Key: pacienteId, Value: { toothId_surface: condition }
+        };
+
+        // Application State
+        let db = { ...defaultData };
+        let activeTool = 'caries';
+        let currentPatientId = 1;
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            setupDateDisplay();
+            renderUpperTeethSVG();
+            renderLowerTeethSVG();
+            switchTab('dashboard');
+            
+            // Toggle Mobile Navigation
+            document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            });
+        });
+
+        // Local Storage Sync
+        function saveToStorage() {
+            localStorage.setItem('dentpos_db', JSON.stringify(db));
+            updateDashboardMetrics();
+        }
+
+        function loadFromStorage() {
+            const stored = localStorage.getItem('dentpos_db');
+            if (stored) {
+                try {
+                    db = JSON.parse(stored);
+                } catch(e) {
+                    db = { ...defaultData };
+                }
+            } else {
+                db = { ...defaultData };
+                saveToStorage();
+            }
+        }
+
+        function resetDemoData() {
+            if (confirm('¿Restablecer el sistema con datos de demostración iniciales?')) {
+                db = JSON.parse(JSON.stringify(defaultData));
+                saveToStorage();
+                location.reload();
+            }
+        }
+
+        function setupDateDisplay() {
+            const now = new Date();
+            document.getElementById('live-date').innerText = now.toLocaleDateString('es-ES', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+            document.getElementById('citas-filter-date').value = now.toISOString().split('T')[0];
+        }
+
+        // Navigation Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-slate-800', 'text-white', 'font-bold');
+                el.classList.add('text-slate-400');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.classList.add('bg-slate-800', 'text-white', 'font-bold');
+                activeNav.classList.remove('text-slate-400');
+            }
+
+            // Refresh tab-specific views
+            if (tabId === 'dashboard') updateDashboardMetrics();
+            if (tabId === 'citas') renderCitasTable();
+            if (tabId === 'expediente') { populatePatientDropdown(); loadPatientOdontogram(); }
+            if (tabId === 'pos') { populatePosDropdowns(); }
+            if (tabId === 'inventario') renderInventoryTable();
+            if (tabId === 'odontologos') renderDoctorsTable();
+
+            // Close mobile menu if open
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+        }
+
+        // ==================== DASHBOARD METRICS ====================
+        function updateDashboardMetrics() {
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            // Citas Hoy
+            const citasHoy = db.citas.filter(c => c.fecha === todayStr);
+            document.getElementById('dash-citas-count').innerText = citasHoy.length;
+
+            // Ingresos Hoy
+            const pagosHoy = db.pagos.filter(p => p.fecha === todayStr);
+            const totalIngresos = pagosHoy.reduce((acc, p) => acc + Number(p.monto), 0);
+            document.getElementById('dash-ingresos-hoy').innerText = `$${totalIngresos.toFixed(2)}`;
+
+            // Pacientes Totales
+            document.getElementById('dash-pacientes-count').innerText = db.pacientes.length;
+
+            // Saldo Pendiente
+            const saldoTotal = db.pacientes.reduce((acc, p) => acc + Number(p.saldoPendiente || 0), 0);
+            document.getElementById('dash-saldo-pendiente').innerText = `$${saldoTotal.toFixed(2)}`;
+
+            // Render Dashboard Citas Table
+            const tbody = document.getElementById('dash-citas-tbody');
+            tbody.innerHTML = '';
+            if (citasHoy.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 text-xs">No hay citas agendadas para hoy.</td></tr>`;
+            } else {
+                citasHoy.forEach(c => {
+                    const paciente = db.pacientes.find(p => p.id == c.pacienteId);
+                    const doctor = db.doctor.find(d => d.id == c.doctorId);
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-3 font-semibold text-slate-700">${c.hora}</td>
+                            <td class="p-3 font-bold text-slate-800">${paciente ? paciente.nombre : 'S/D'}</td>
+                            <td class="p-3 text-slate-600">${c.tratamiento}</td>
+                            <td class="p-3 text-slate-500">${doctor ? doctor.nombre : 'S/D'}</td>
+                            <td class="p-3 text-center">${getStatusBadge(c.estado)}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Render Low Stock List
+            const lowStockList = document.getElementById('dash-low-stock-list');
+            lowStockList.innerHTML = '';
+            const lowItems = db.insumos.filter(i => Number(i.stock) <= Number(i.min));
+            if (lowItems.length === 0) {
+                lowStockList.innerHTML = `<li class="text-xs text-slate-400 text-center py-2">Stock suficiente en todos los materiales.</li>`;
+            } else {
+                lowItems.forEach(i => {
+                    lowStockList.innerHTML += `
+                        <li class="flex justify-between items-center text-xs p-2 bg-amber-50 rounded-lg border border-amber-200">
+                            <span class="font-semibold text-amber-900">${i.nombre}</span>
+                            <span class="font-bold text-amber-700">${i.stock} / ${i.min} mín.</span>
+                        </li>
+                    `;
+                });
+            }
+        }
+
+        function getStatusBadge(estado) {
+            switch(estado) {
+                case 'Confirmada': return `<span class="px-2.5 py-1 bg-cyan-100 text-cyan-800 rounded-full text-[10px] font-bold">Confirmada</span>`;
+                case 'En Espera': return `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold">En Espera</span>`;
+                case 'Atendida': return `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">Atendida</span>`;
+                case 'Cancelada': return `<span class="px-2.5 py-1 bg-rose-100 text-rose-800 rounded-full text-[10px] font-bold">Cancelada</span>`;
+                default: return `<span class="px-2.5 py-1 bg-slate-100 text-slate-800 rounded-full text-[10px] font-bold">${estado}</span>`;
+            }
+        }
+
+        // ==================== AGENDA DE CITAS ====================
+        function renderCitasTable() {
+            const selectedDate = document.getElementById('citas-filter-date').value;
+            const selectedStatus = document.getElementById('citas-filter-status').value;
+
+            let filtered = db.citas;
+            if (selectedDate) filtered = filtered.filter(c => c.fecha === selectedDate);
+            if (selectedStatus !== 'Todos') filtered = filtered.filter(c => c.estado === selectedStatus);
+
+            const tbody = document.getElementById('citas-table-body');
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400 text-xs">No existen citas registradas bajo estos filtros.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(c => {
+                const paciente = db.pacientes.find(p => p.id == c.pacienteId);
+                const doctor = db.doctor.find(d => d.id == c.doctorId);
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="p-4 font-semibold text-slate-800">${c.fecha} <span class="text-teal-600 font-bold ml-1">${c.hora}</span></td>
+                        <td class="p-4 font-bold text-slate-900">${paciente ? paciente.nombre : 'Desconocido'}</td>
+                        <td class="p-4">${c.tratamiento}</td>
+                        <td class="p-4 text-slate-500">${doctor ? doctor.nombre : 'Desconocido'}</td>
+                        <td class="p-4 text-xs text-slate-500 italic">${c.notas || '-'}</td>
+                        <td class="p-4 text-center">${getStatusBadge(c.estado)}</td>
+                        <td class="p-4 text-center space-x-1">
+                            <select onchange="updateCitaStatus(${c.id}, this.value)" class="text-xs bg-slate-100 border border-slate-200 rounded-lg p-1 font-semibold">
+                                <option value="Confirmada" ${c.estado === 'Confirmada' ? 'selected' : ''}>Confirmada</option>
+                                <option value="En Espera" ${c.estado === 'En Espera' ? 'selected' : ''}>En Espera</option>
+                                <option value="Atendida" ${c.estado === 'Atendida' ? 'selected' : ''}>Atendida</option>
+                                <option value="Cancelada" ${c.estado === 'Cancelada' ? 'selected' : ''}>Cancelada</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateCitaStatus(citaId, newStatus) {
+            const cita = db.citas.find(c => c.id == citaId);
+            if (cita) {
+                cita.estado = newStatus;
+                saveToStorage();
+                renderCitasTable();
+            }
+        }
+
+        function openNewCitaModal() {
+            populatePatientDropdowns();
+            populateDoctorDropdowns();
+            document.getElementById('cita-fecha').value = new Date().toISOString().split('T')[0];
+            openModal('modal-cita');
+        }
+
+        function saveCita(e) {
+            e.preventDefault();
+            const newCita = {
+                id: Date.now(),
+                pacienteId: Number(document.getElementById('cita-patient-id').value),
+                doctorId: Number(document.getElementById('cita-doctor-id').value),
+                fecha: document.getElementById('cita-fecha').value,
+                hora: document.getElementById('cita-hora').value,
+                tratamiento: document.getElementById('cita-tratamiento').value,
+                estado: 'Confirmada',
+                notas: 'Agendada desde sistema'
+            };
+
+            db.citas.push(newCita);
+            saveToStorage();
+            closeModal('modal-cita');
+            renderCitasTable();
+        }
+
+        // ==================== EXPEDIENTE Y ODONTOGRAMA SVG ====================
+        // Teeth Numbers system FDI:
+        // Upper: 18..11, 21..28
+        // Lower: 48..41, 31..38
+        const upperTeethFDI = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
+        const lowerTeethFDI = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+
+        function renderUpperTeethSVG() {
+            const container = document.getElementById('odontogram-upper');
+            container.innerHTML = upperTeethFDI.map(num => createToothSVG(num)).join('');
+        }
+
+        function renderLowerTeethSVG() {
+            const container = document.getElementById('odontogram-lower');
+            container.innerHTML = lowerTeethFDI.map(num => createToothSVG(num)).join('');
+        }
+
+        function createToothSVG(toothNumber) {
+            // Standard Tooth structure with 5 surfaces (Top, Bottom, Left, Right, Center)
+            return `
+            <div id="tooth-card-${toothNumber}" class="flex flex-col items-center bg-white p-1 rounded-xl border border-slate-200 shadow-sm hover:border-teal-400 transition">
+                <span class="text-[10px] font-bold text-slate-500 mb-1">D${toothNumber}</span>
+                <svg id="svg-tooth-${toothNumber}" class="w-9 h-11" viewBox="0 0 100 120">
+                    <!-- Tooth Whole Indicators (Crown / Endodontic) -->
+                    <rect x="5" y="5" width="90" height="110" rx="10" fill="transparent" class="tooth-frame" />
+                    
+                    <!-- Top / Vestibular surface -->
+                    <polygon points="5,5 95,5 75,25 25,25" class="tooth-surface surface-top" onclick="onSurfaceClick(${toothNumber}, 'top')" />
+                    <!-- Right / Distal surface -->
+                    <polygon points="95,5 95,115 75,95 75,25" class="tooth-surface surface-right" onclick="onSurfaceClick(${toothNumber}, 'right')" />
+                    <!-- Bottom / Lingual surface -->
+                    <polygon points="95,115 5,115 25,95 75,95" class="tooth-surface surface-bottom" onclick="onSurfaceClick(${toothNumber}, 'bottom')" />
+                    <!-- Left / Mesial surface -->
+                    <polygon points="5,115 5,5 25,25 25,95" class="tooth-surface surface-left" onclick="onSurfaceClick(${toothNumber}, 'left')" />
+                    <!-- Center / Oclusal surface -->
+                    <polygon points="25,25 75,25 75,95 25,95" class="tooth-surface surface-center" onclick="onSurfaceClick(${toothNumber}, 'center')" />
+                </svg>
+                <div class="flex gap-1 mt-1">
+                    <button onclick="toggleWholeToothCondition(${toothNumber}, 'endodontic')" title="Endodoncia" class="text-[9px] text-purple-600 hover:bg-purple-50 px-1 rounded">E</button>
+                    <button onclick="toggleWholeToothCondition(${toothNumber}, 'crown')" title="Corona" class="text-[9px] text-amber-600 hover:bg-amber-50 px-1 rounded">C</button>
+                    <button onclick="toggleWholeToothCondition(${toothNumber}, 'absent')" title="Ausente" class="text-[9px] text-slate-600 hover:bg-slate-100 px-1 rounded">X</button>
+                </div>
+            </div>
+            `;
+        }
+
+        function setTool(toolName) {
+            activeTool = toolName;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('ring-2', 'ring-teal-500', 'font-bold'));
+            document.getElementById(`tool-${toolName}`).classList.add('ring-2', 'ring-teal-500', 'font-bold');
+        }
+
+        function onSurfaceClick(toothNumber, surface) {
+            if (!currentPatientId) return;
+
+            if (!db.odontogramas[currentPatientId]) {
+                db.odontogramas[currentPatientId] = {};
+            }
+
+            const key = `${toothNumber}_${surface}`;
+            
+            if (activeTool === 'clear') {
+                delete db.odontogramas[currentPatientId][key];
+            } else {
+                db.odontogramas[currentPatientId][key] = activeTool;
+            }
+
+            saveToStorage();
+            renderPatientOdontogramState();
+        }
+
+        function toggleWholeToothCondition(toothNumber, condition) {
+            if (!currentPatientId) return;
+            if (!db.odontogramas[currentPatientId]) db.odontogramas[currentPatientId] = {};
+
+            const key = `${toothNumber}_whole`;
+            if (db.odontogramas[currentPatientId][key] === condition) {
+                delete db.odontogramas[currentPatientId][key];
+            } else {
+                db.odontogramas[currentPatientId][key] = condition;
+            }
+
+            saveToStorage();
+            renderPatientOdontogramState();
+        }
+
+        function populatePatientDropdown() {
+            const select = document.getElementById('odontograma-patient-select');
+            select.innerHTML = db.pacientes.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+            if (db.pacientes.length > 0) {
+                if (!currentPatientId) currentPatientId = db.pacientes[0].id;
+                select.value = currentPatientId;
+            }
+        }
+
+        function loadPatientOdontogram() {
+            const select = document.getElementById('odontograma-patient-select');
+            currentPatientId = Number(select.value);
+            renderPatientOdontogramState();
+            renderPatientFileDetails();
+        }
+
+        function renderPatientOdontogramState() {
+            // Clear all current SVG colors
+            document.querySelectorAll('.tooth-surface').forEach(el => {
+                el.classList.remove('surface-caries', 'surface-restoration', 'surface-sealant');
+            });
+            document.querySelectorAll('[id^="tooth-card-"]').forEach(card => {
+                card.classList.remove('tooth-absent', 'tooth-endodontic', 'tooth-crown');
+            });
+
+            const patientData = db.odontogramas[currentPatientId] || {};
+
+            Object.keys(patientData).forEach(key => {
+                const condition = patientData[key];
+                const [toothNum, surface] = key.split('_');
+
+                if (surface === 'whole') {
+                    const toothCard = document.getElementById(`tooth-card-${toothNum}`);
+                    if (toothCard) {
+                        if (condition === 'absent') toothCard.classList.add('tooth-absent');
+                        if (condition === 'endodontic') toothCard.classList.add('tooth-endodontic');
+                        if (condition === 'crown') toothCard.classList.add('tooth-crown');
+                    }
+                } else {
+                    const svg = document.getElementById(`svg-tooth-${toothNum}`);
+                    if (svg) {
+                        const surfacePoly = svg.querySelector(`.surface-${surface}`);
+                        if (surfacePoly) {
+                            if (condition === 'caries') surfacePoly.classList.add('surface-caries');
+                            if (condition === 'restoration') surfacePoly.classList.add('surface-restoration');
+                            if (condition === 'sealant') surfacePoly.classList.add('surface-sealant');
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderPatientFileDetails() {
+            const paciente = db.pacientes.find(p => p.id == currentPatientId);
+            if (!paciente) return;
+
+            // Details card
+            document.getElementById('patient-details-card').innerHTML = `
+                <p><strong>Paciente:</strong> ${paciente.nombre} (${paciente.edad} años)</p>
+                <p><strong>Teléfono:</strong> ${paciente.telefono}</p>
+                <p><strong>Alergias/Observaciones:</strong> <span class="text-rose-600 font-semibold">${paciente.alergias || 'Ninguna'}</span></p>
+                <p><strong>Saldo Pendiente Total:</strong> <span class="text-rose-600 font-bold">$${Number(paciente.saldoPendiente || 0).toFixed(2)}</span></p>
+            `;
+
+            // Notes
+            const notesContainer = document.getElementById('patient-notes-list');
+            notesContainer.innerHTML = (paciente.notas || []).map(n => `
+                <div class="bg-slate-50 border border-slate-200 p-2 rounded-lg text-xs text-slate-700">
+                    ${n}
+                </div>
+            `).join('') || `<p class="text-xs text-slate-400">Sin notas registradas.</p>`;
+
+            // Treatments
+            const treatmentsContainer = document.getElementById('patient-treatments-list');
+            treatmentsContainer.innerHTML = (paciente.tratamientos || []).map(t => `
+                <div class="flex justify-between items-center bg-slate-50 border border-slate-200 p-2 rounded-lg">
+                    <span>${t.nombre}</span>
+                    <div class="text-right">
+                        <span class="font-bold text-slate-800">$${Number(t.costo).toFixed(2)}</span>
+                        <span class="block text-[10px] ${t.estado === 'Pagado' ? 'text-emerald-600 font-bold' : 'text-rose-600'}">${t.estado}</span>
+                    </div>
+                </div>
+            `).join('') || `<p class="text-xs text-slate-400">Sin tratamientos registrados.</p>`;
+        }
+
+        function addPatientNote() {
+            const noteInput = document.getElementById('patient-new-note');
+            if (!noteInput.value.trim()) return;
+
+            const paciente = db.pacientes.find(p => p.id == currentPatientId);
+            if (paciente) {
+                if (!paciente.notas) paciente.notas = [];
+                const dateStr = new Date().toLocaleDateString('es-ES');
+                paciente.notas.unshift(`${dateStr} - ${noteInput.value.trim()}`);
+                saveToStorage();
+                noteInput.value = '';
+                renderPatientFileDetails();
+            }
+        }
+
+        function openAddTreatmentModal() {
+            openModal('modal-tratamiento');
+        }
+
+        function saveTratamientoPlan(e) {
+            e.preventDefault();
+            const paciente = db.pacientes.find(p => p.id == currentPatientId);
+            if (!paciente) return;
+
+            const costo = Number(document.getElementById('tratamiento-costo').value);
+            const newTreatment = {
+                id: Date.now(),
+                nombre: document.getElementById('tratamiento-nombre').value,
+                costo: costo,
+                pagado: 0,
+                estado: 'Pendiente'
+            };
+
+            if (!paciente.tratamientos) paciente.tratamientos = [];
+            paciente.tratamientos.push(newTreatment);
+            paciente.saldoPendiente = Number(paciente.saldoPendiente || 0) + costo;
+
+            saveToStorage();
+            closeModal('modal-tratamiento');
+            renderPatientFileDetails();
+        }
+
+        function openNewPatientModal() {
+            openModal('modal-paciente');
+        }
+
+        function savePaciente(e) {
+            e.preventDefault();
+            const newP = {
+                id: Date.now(),
+                nombre: document.getElementById('paciente-nombre').value,
+                telefono: document.getElementById('paciente-telefono').value,
+                edad: document.getElementById('paciente-edad').value,
+                alergias: document.getElementById('paciente-alergias').value,
+                saldoPendiente: 0,
+                notas: [],
+                tratamientos: []
+            };
+
+            db.pacientes.push(newP);
+            currentPatientId = newP.id;
+            saveToStorage();
+            closeModal('modal-paciente');
+            populatePatientDropdown();
+            loadPatientOdontogram();
+        }
+
+        // ==================== POS / CAJA Y COBROS ====================
+        function populatePosDropdowns() {
+            const patientSelect = document.getElementById('pos-patient-select');
+            patientSelect.innerHTML = db.pacientes.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+
+            const doctorSelect = document.getElementById('pos-doctor-select');
+            doctorSelect.innerHTML = db.doctor.map(d => `<option value="${d.id}">${d.nombre} (${d.especialidad})</option>`).join('');
+
+            updatePosPendingTreatments();
+            renderRecentPaymentsList();
+        }
+
+        function updatePosPendingTreatments() {
+            const pacienteId = Number(document.getElementById('pos-patient-select').value);
+            const paciente = db.pacientes.find(p => p.id === pacienteId);
+            const treatmentSelect = document.getElementById('pos-treatment-select');
+
+            if (!paciente || !paciente.tratamientos || paciente.tratamientos.length === 0) {
+                treatmentSelect.innerHTML = `<option value="">Sin tratamientos registrados</option>`;
+                document.getElementById('pos-costo-total').value = '0.00';
+                document.getElementById('pos-saldo-pendiente').value = '0.00';
+                document.getElementById('pos-monto-abono').value = '';
+                return;
+            }
+
+            treatmentSelect.innerHTML = paciente.tratamientos.map(t => `
+                <option value="${t.id}">${t.nombre} - Costo: $${t.costo} (${t.estado})</option>
+            `).join('');
+
+            calculatePosTotal();
+        }
+
+        function calculatePosTotal() {
+            const pacienteId = Number(document.getElementById('pos-patient-select').value);
+            const paciente = db.pacientes.find(p => p.id === pacienteId);
+            const treatmentId = Number(document.getElementById('pos-treatment-select').value);
+
+            if (!paciente) return;
+
+            const t = (paciente.tratamientos || []).find(item => item.id === treatmentId);
+            if (t) {
+                const resto = t.costo - (t.pagado || 0);
+                document.getElementById('pos-costo-total').value = Number(t.costo).toFixed(2);
+                document.getElementById('pos-saldo-pendiente').value = Number(resto).toFixed(2);
+                document.getElementById('pos-monto-abono').value = Number(resto).toFixed(2);
+            } else {
+                document.getElementById('pos-costo-total').value = '0.00';
+                document.getElementById('pos-saldo-pendiente').value = '0.00';
+                document.getElementById('pos-monto-abono').value = '0.00';
+            }
+        }
+
+        function validatePosPayment() {
+            const maxVal = Number(document.getElementById('pos-saldo-pendiente').value);
+            const input = document.getElementById('pos-monto-abono');
+            if (Number(input.value) > maxVal) {
+                input.value = maxVal;
+            }
+        }
+
+        function processPayment() {
+            const pacienteId = Number(document.getElementById('pos-patient-select').value);
+            const doctorId = Number(document.getElementById('pos-doctor-select').value);
+            const treatmentId = Number(document.getElementById('pos-treatment-select').value);
+            const montoAbono = Number(document.getElementById('pos-monto-abono').value);
+
+            if (!montoAbono || montoAbono <= 0) {
+                alert('Por favor ingrese un monto válido a cobrar.');
+                return;
+            }
+
+            const paciente = db.pacientes.find(p => p.id === pacienteId);
+            const doctor = db.doctor.find(d => d.id === doctorId);
+            const tratamiento = (paciente.tratamientos || []).find(t => t.id === treatmentId);
+
+            if (!paciente || !tratamiento) {
+                alert('Seleccione un tratamiento válido.');
+                return;
+            }
+
+            const metodoPago = document.querySelector('input[name="pos-payment-method"]:checked').value;
+
+            // Update treatment paid state
+            tratamiento.pagado = (tratamiento.pagado || 0) + montoAbono;
+            if (tratamiento.pagado >= tratamiento.costo) {
+                tratamiento.estado = 'Pagado';
+            } else {
+                tratamiento.estado = 'Abonado';
+            }
+
+            // Update patient overall pending debt
+            paciente.saldoPendiente = Math.max(0, Number(paciente.saldoPendiente) - montoAbono);
+
+            // Record payment log
+            const folio = `F-${1000 + db.pagos.length + 1}`;
+            const newPago = {
+                id: Date.now(),
+                folio: folio,
+                fecha: new Date().toISOString().split('T')[0],
+                pacienteId: paciente.id,
+                doctorId: doctor.id,
+                tratamiento: tratamiento.nombre,
+                monto: montoAbono,
+                metodo: metodoPago,
+                saldoRestante: tratamiento.costo - tratamiento.pagado
+            };
+
+            db.pagos.push(newPago);
+            saveToStorage();
+
+            // Render Ticket Modal
+            document.getElementById('ticket-folio').innerText = folio;
+            document.getElementById('ticket-fecha').innerText = new Date().toLocaleDateString('es-ES');
+            document.getElementById('ticket-paciente').innerText = paciente.nombre;
+            document.getElementById('ticket-doctor').innerText = doctor.nombre;
+            document.getElementById('ticket-concepto').innerText = tratamiento.nombre;
+            document.getElementById('ticket-monto-concepto').innerText = `$${montoAbono.toFixed(2)}`;
+            document.getElementById('ticket-metodo').innerText = metodoPago;
+            document.getElementById('ticket-total').innerText = `$${montoAbono.toFixed(2)}`;
+            document.getElementById('ticket-saldo-restante').innerText = `$${(tratamiento.costo - tratamiento.pagado).toFixed(2)}`;
+
+            openModal('modal-ticket');
+            populatePosDropdowns();
+        }
+
+        function renderRecentPaymentsList() {
+            const container = document.getElementById('pos-recent-payments-list');
+            const sorted = [...db.pagos].reverse();
+
+            if (sorted.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Sin pagos registrados hoy.</p>`;
+                return;
+            }
+
+            container.innerHTML = sorted.map(p => {
+                const paciente = db.pacientes.find(pac => pac.id === p.pacienteId);
+                return `
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-bold text-slate-800">${p.folio}</span>
+                            <span class="text-[10px] text-slate-400">${p.fecha}</span>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-700">${paciente ? paciente.nombre : 'Paciente'}</p>
+                        <div class="flex justify-between items-center text-xs pt-1">
+                            <span class="text-slate-500">${p.metodo}</span>
+                            <span class="font-bold text-emerald-600">$${Number(p.monto).toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openCorteCajaModal() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const pagosHoy = db.pagos.filter(p => p.fecha === todayStr);
+
+            let totalEfectivo = 0;
+            let totalTarjeta = 0;
+            let totalTransf = 0;
+
+            pagosHoy.forEach(p => {
+                if (p.metodo === 'Efectivo') totalEfectivo += Number(p.monto);
+                if (p.metodo === 'Tarjeta') totalTarjeta += Number(p.monto);
+                if (p.metodo === 'Transferencia') totalTransf += Number(p.monto);
+            });
+
+            const totalGeneral = totalEfectivo + totalTarjeta + totalTransf;
+
+            document.getElementById('corte-caja-details').innerHTML = `
+                <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex justify-between items-center">
+                    <span class="font-bold text-emerald-900 text-sm">Total General Recaudado:</span>
+                    <span class="font-extrabold text-emerald-700 text-lg">$${totalGeneral.toFixed(2)}</span>
+                </div>
+                <div class="space-y-2 pt-2">
+                    <div class="flex justify-between p-2.5 bg-slate-50 rounded-lg">
+                        <span><i class="fa-solid fa-money-bill-wave text-emerald-600 mr-2"></i> Efectivo en Caja:</span>
+                        <span class="font-bold text-slate-800">$${totalEfectivo.toFixed(2)}</span>
+                    </div>
+                    <div class="flex justify-between p-2.5 bg-slate-50 rounded-lg">
+                        <span><i class="fa-solid fa-credit-card text-blue-600 mr-2"></i> Pagos con Tarjeta:</span>
+                        <span class="font-bold text-slate-800">$${totalTarjeta.toFixed(2)}</span>
+                    </div>
+                    <div class="flex justify-between p-2.5 bg-slate-50 rounded-lg">
+                        <span><i class="fa-solid fa-mobile-screen text-indigo-600 mr-2"></i> Transferencias SPEI:</span>
+                        <span class="font-bold text-slate-800">$${totalTransf.toFixed(2)}</span>
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-400 text-center pt-2">Total de operaciones procesadas hoy: ${pagosHoy.length}</p>
+            `;
+
+            openModal('modal-corte');
+        }
+
+        // ==================== INVENTARIO DE INSUMOS ====================
+        function renderInventoryTable() {
+            const search = document.getElementById('inventory-search').value.toLowerCase();
+            const tbody = document.getElementById('inventory-table-body');
+            tbody.innerHTML = '';
+
+            const filtered = db.insumos.filter(i => i.nombre.toLowerCase().includes(search) || i.categoria.toLowerCase().includes(search));
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400 text-xs">No se encontraron insumos.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(i => {
+                const isLow = Number(i.stock) <= Number(i.min);
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="p-4 font-bold text-slate-800">${i.nombre}</td>
+                        <td class="p-4 text-slate-500">${i.categoria}</td>
+                        <td class="p-4 font-extrabold ${isLow ? 'text-amber-600' : 'text-slate-700'}">${i.stock}</td>
+                        <td class="p-4 text-slate-400">${i.min}</td>
+                        <td class="p-4 text-slate-700 font-semibold">$${Number(i.costo).toFixed(2)}</td>
+                        <td class="p-4 text-center">
+                            ${isLow ? `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold">Stock Bajo</span>` : `<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">Óptimo</span>`}
+                        </td>
+                        <td class="p-4 text-center space-x-2">
+                            <button onclick="adjustStock(${i.id}, 1)" class="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-xs font-bold" title="Aumentar Stock">+1</button>
+                            <button onclick="adjustStock(${i.id}, -1)" class="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-xs font-bold" title="Reducir Stock">-1</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function adjustStock(insumoId, delta) {
+            const item = db.insumos.find(i => i.id === insumoId);
+            if (item) {
+                item.stock = Math.max(0, Number(item.stock) + delta);
+                saveToStorage();
+                renderInventoryTable();
+            }
+        }
+
+        function openNewInsumoModal() {
+            openModal('modal-insumo');
+        }
+
+        function saveInsumo(e) {
+            e.preventDefault();
+            const newInsumo = {
+                id: Date.now(),
+                nombre: document.getElementById('insumo-nombre').value,
+                categoria: document.getElementById('insumo-categoria').value,
+                stock: Number(document.getElementById('insumo-stock').value),
+                min: Number(document.getElementById('insumo-min').value),
+                costo: Number(document.getElementById('insumo-costo').value)
+            };
+
+            db.insumos.push(newInsumo);
+            saveToStorage();
+            closeModal('modal-insumo');
+            renderInventoryTable();
+        }
+
+        // ==================== DOCTORES Y COMISIONES ====================
+        function renderDoctorsTable() {
+            const tbody = document.getElementById('doctors-table-body');
+            tbody.innerHTML = '';
+
+            const summaryContainer = document.getElementById('doctor-payout-summary');
+            summaryContainer.innerHTML = '';
+
+            db.doctor.forEach(doc => {
+                // Calculate doctor total generated revenue from payments
+                const docPayments = db.pagos.filter(p => p.doctorId === doc.id);
+                const totalGenerado = docPayments.reduce((acc, p) => acc + Number(p.monto), 0);
+                const comisionHonorarios = totalGenerado * (Number(doc.comision) / 100);
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="p-4 font-bold text-slate-800">${doc.nombre}</td>
+                        <td class="p-4 text-slate-500">${doc.especialidad}</td>
+                        <td class="p-4 font-bold text-indigo-600">${doc.comision}%</td>
+                        <td class="p-4 font-semibold text-slate-700">$${totalGenerado.toFixed(2)}</td>
+                        <td class="p-4 text-center font-extrabold text-emerald-600">$${comisionHonorarios.toFixed(2)}</td>
+                    </tr>
+                `;
+
+                summaryContainer.innerHTML += `
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-bold text-slate-800">${doc.nombre}</span>
+                            <span class="text-xs font-bold text-emerald-600">$${comisionHonorarios.toFixed(2)}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400">Generado: $${totalGenerado.toFixed(2)} (${doc.comision}% comisión)</p>
+                    </div>
+                `;
+            });
+        }
+
+        function openNewDoctorModal() {
+            openModal('modal-doctor');
+        }
+
+        function saveDoctor(e) {
+            e.preventDefault();
+            const newDoc = {
+                id: Date.now(),
+                nombre: document.getElementById('doctor-nombre').value,
+                especialidad: document.getElementById('doctor-especialidad').value,
+                comision: Number(document.getElementById('doctor-comision').value)
+            };
+
+            db.doctor.push(newDoc);
+            saveToStorage();
+            closeModal('modal-doctor');
+            renderDoctorsTable();
+        }
+
+        // ==================== DROPDOWN POPULATORS & HELPERS ====================
+        function populatePatientDropdowns() {
+            const selects = [document.getElementById('cita-patient-id')];
+            selects.forEach(select => {
+                if (select) {
+                    select.innerHTML = db.pacientes.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                }
+            });
+        }
+
+        function populateDoctorDropdowns() {
+            const selects = [document.getElementById('cita-doctor-id')];
+            selects.forEach(select => {
+                if (select) {
+                    select.innerHTML = db.doctor.map(d => `<option value="${d.id}">${d.nombre} (${d.especialidad})</option>`).join('');
+                }
+            });
+        }
+
+        // Modal Controls
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
